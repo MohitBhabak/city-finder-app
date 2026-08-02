@@ -437,7 +437,11 @@
                 </div>
                 <div class="flex justify-between bg-slate-950/60 p-1.5 rounded border border-slate-800">
                   <span class="text-slate-400">Population:</span>
-                  <span class="font-semibold text-slate-200">${city.population.toLocaleString()} (${city.visibleMinorityPercentage}% min)</span>
+                  <span class="font-semibold text-slate-200">${city.population.toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between bg-slate-950/60 p-1.5 rounded border border-slate-800">
+                  <span class="text-slate-400">Visible Minority:</span>
+                  <span class="font-bold text-purple-300">${city.visibleMinorityPercentage}%</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1 text-[10px] text-center pt-0.5">
                   <div class="bg-slate-950/60 p-1 rounded border border-slate-800">Costco: <strong class="text-amber-300">${city.travelTimeToCostcoMinutes}m</strong></div>
@@ -451,9 +455,12 @@
             </div>
           `;
 
-          marker.bindPopup(popupContent);
+          // Disabling autoPan on popup so flyTo and popup opening happen simultaneously on the 1st click
+          marker.bindPopup(popupContent, { autoPan: false });
+
           marker.on('click', () => {
             setSelectedCity(city);
+            marker.openPopup();
           });
 
           markersRef.current[city.id] = marker;
@@ -467,6 +474,9 @@
 
       useEffect(() => {
         if (selectedCity && mapInstanceRef.current) {
+          if (markersRef.current[selectedCity.id]) {
+            markersRef.current[selectedCity.id].openPopup();
+          }
           mapInstanceRef.current.flyTo(
             [selectedCity.coordinates.lat, selectedCity.coordinates.lng],
             10,

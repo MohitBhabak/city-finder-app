@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ExternalLink, Home, DollarSign, Users, ShoppingBag, Navigation } from 'lucide-react';
+import { ExternalLink, Home, DollarSign, Users, Sparkles } from 'lucide-react';
 
 // Controller component for programmatic map panning & fixing container size bugs
 function MapViewController({ selectedCity }) {
@@ -37,7 +37,7 @@ function MapViewController({ selectedCity }) {
   return null;
 }
 
-const createCustomIcon = (isMatching, isSelected, population) => {
+const createCustomIcon = (isMatching, isSelected) => {
   if (!isMatching) {
     return L.divIcon({
       className: 'custom-div-icon',
@@ -114,10 +114,13 @@ export default function CityMap({
             <Marker
               key={city.id}
               position={[city.coordinates.lat, city.coordinates.lng]}
-              icon={createCustomIcon(isMatching, isSelected, city.population)}
+              icon={createCustomIcon(isMatching, isSelected)}
               eventHandlers={{
-                click: () => {
+                click: (e) => {
                   onSelectCity(city);
+                  if (e.target && e.target.openPopup) {
+                    e.target.openPopup();
+                  }
                 }
               }}
               zIndexOffset={isSelected ? 1000 : isMatching ? 500 : 1}
@@ -136,7 +139,7 @@ export default function CityMap({
                 </div>
               </Tooltip>
 
-              <Popup className="custom-leaflet-popup">
+              <Popup className="custom-leaflet-popup" autoPan={false}>
                 <div className="p-4 w-64 bg-slate-900 rounded-xl text-slate-100 font-sans">
                   <div className="border-b border-slate-800 pb-2 mb-2.5 flex items-start justify-between">
                     <div>
@@ -183,7 +186,17 @@ export default function CityMap({
                         <span>Population</span>
                       </span>
                       <span className="font-semibold text-slate-200">
-                        {formatNumber(city.population)} ({city.visibleMinorityPercentage}% min)
+                        {formatNumber(city.population)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between bg-slate-950/60 p-1.5 rounded border border-slate-800">
+                      <span className="text-slate-400 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Visible Minority</span>
+                      </span>
+                      <span className="font-bold text-purple-300">
+                        {city.visibleMinorityPercentage}%
                       </span>
                     </div>
 
