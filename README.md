@@ -24,6 +24,7 @@ An interactive web application designed to help home buyers, commuters, and fami
 - **🗺️ Interactive Map & Instant Single-Click Popups**  
   - Interactive Leaflet map with custom status pins (Matching vs. Filtered).
   - **Instant Single-Click Popups**: Map pin info cards open immediately on the first click while the map smoothly animates/flies to the target location.
+  - **100% Free Basemaps (No API Key Required)**: Seamless basemap switching between OpenStreetMap Humanitarian, Esri World Street Map, and Esri Topographic with zero API key watermarks or rate limit worries.
   - Detail modal dialogs with comprehensive metrics and direct outbound links to Wikipedia pages.
 
 - **⚡ Dual-Mode Execution**  

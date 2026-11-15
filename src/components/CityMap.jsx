@@ -1,7 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ExternalLink, Home, DollarSign, Users, Sparkles } from 'lucide-react';
+import { ExternalLink, Home, DollarSign, Users, Sparkles, Layers } from 'lucide-react';
+
+const TILE_PROVIDERS = {
+  osm: {
+    name: 'OSM',
+    url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a>',
+    maxZoom: 19
+  },
+  streets: {
+    name: 'Streets',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, USGS, NRCAN',
+    maxZoom: 19
+  },
+  topo: {
+    name: 'Topo',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+    maxZoom: 19
+  }
+};
 
 // Controller component for programmatic map panning & fixing container size bugs
 function MapViewController({ selectedCity }) {
@@ -76,6 +97,7 @@ export default function CityMap({
 }) {
   const center = [43.9, -79.8];
   const zoom = 8;
+  const [mapStyle, setMapStyle] = useState('osm');
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-CA', {
@@ -91,6 +113,44 @@ export default function CityMap({
 
   return (
     <div className="relative w-full h-full bg-slate-950 overflow-hidden">
+      {/* Floating Basemap Selector */}
+      <div className="absolute top-4 right-4 z-[1000] flex items-center bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-lg text-xs font-medium">
+        <Layers className="w-3.5 h-3.5 text-slate-400 ml-1.5 mr-1" />
+        <button
+          onClick={() => setMapStyle('osm')}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${
+            mapStyle === 'osm'
+              ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+              : 'text-slate-300 hover:text-white'
+          }`}
+          title="OpenStreetMap Humanitarian"
+        >
+          OSM
+        </button>
+        <button
+          onClick={() => setMapStyle('streets')}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${
+            mapStyle === 'streets'
+              ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+              : 'text-slate-300 hover:text-white'
+          }`}
+          title="Esri World Street Map"
+        >
+          Streets
+        </button>
+        <button
+          onClick={() => setMapStyle('topo')}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${
+            mapStyle === 'topo'
+              ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+              : 'text-slate-300 hover:text-white'
+          }`}
+          title="Esri Topographic Map"
+        >
+          Topo
+        </button>
+      </div>
+
       <MapContainer
         center={center}
         zoom={zoom}
@@ -99,9 +159,10 @@ export default function CityMap({
         zoomControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          maxZoom={19}
+          key={mapStyle}
+          attribution={TILE_PROVIDERS[mapStyle].attribution}
+          url={TILE_PROVIDERS[mapStyle].url}
+          maxZoom={TILE_PROVIDERS[mapStyle].maxZoom}
         />
 
         <MapViewController selectedCity={selectedCity} />

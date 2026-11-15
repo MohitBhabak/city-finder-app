@@ -289,6 +289,27 @@
       maxMetroTime: 180
     };
 
+    const TILE_PROVIDERS = {
+      osm: {
+        name: 'OSM',
+        url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a>',
+        maxZoom: 19
+      },
+      streets: {
+        name: 'Streets',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, USGS, NRCAN',
+        maxZoom: 19
+      },
+      topo: {
+        name: 'Topo',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+        maxZoom: 19
+      }
+    };
+
     function App() {
       const [cities, setCities] = useState(window.ONTARIO_CITIES_DATA || []);
       const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -297,9 +318,11 @@
       const [mobileTab, setMobileTab] = useState('filters');
       const [searchQuery, setSearchQuery] = useState('');
       const [sortBy, setSortBy] = useState('population-desc');
+      const [mapStyle, setMapStyle] = useState('osm');
 
       const mapContainerRef = useRef(null);
       const mapInstanceRef = useRef(null);
+      const tileLayerRef = useRef(null);
       const markersRef = useRef({});
 
       // Population Min & Max and Income filter logic
@@ -355,9 +378,10 @@
           zoomControl: false
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          maxZoom: 19
+        const initialConfig = TILE_PROVIDERS.osm;
+        tileLayerRef.current = L.tileLayer(initialConfig.url, {
+          attribution: initialConfig.attribution,
+          maxZoom: initialConfig.maxZoom
         }).addTo(map);
 
         mapInstanceRef.current = map;
@@ -376,6 +400,19 @@
           window.removeEventListener('resize', handleResize);
         };
       }, []);
+
+      // Handle map basemap layer switching
+      useEffect(() => {
+        if (!mapInstanceRef.current) return;
+        if (tileLayerRef.current) {
+          mapInstanceRef.current.removeLayer(tileLayerRef.current);
+        }
+        const conf = TILE_PROVIDERS[mapStyle] || TILE_PROVIDERS.osm;
+        tileLayerRef.current = L.tileLayer(conf.url, {
+          attribution: conf.attribution,
+          maxZoom: conf.maxZoom
+        }).addTo(mapInstanceRef.current);
+      }, [mapStyle]);
 
       useEffect(() => {
         if (mapInstanceRef.current) {
@@ -646,6 +683,43 @@
 
             {/* Map Container */}
             <div className={`flex-1 h-full relative ${mobileTab === 'map' ? 'block' : 'hidden sm:block'}`}>
+              {/* Floating Basemap Selector */}
+              <div className="absolute top-4 right-4 z-[1000] flex items-center bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-lg text-xs font-medium">
+                <span className="text-slate-400 text-[11px] px-1.5 font-semibold">Map:</span>
+                <button
+                  onClick={() => setMapStyle('osm')}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    mapStyle === 'osm'
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="OpenStreetMap Humanitarian"
+                >
+                  OSM
+                </button>
+                <button
+                  onClick={() => setMapStyle('streets')}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    mapStyle === 'streets'
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Esri World Street Map"
+                >
+                  Streets
+                </button>
+                <button
+                  onClick={() => setMapStyle('topo')}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    mapStyle === 'topo'
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Esri Topographic Map"
+                >
+                  Topo
+                </button>
+              </div>
               <div ref={mapContainerRef} className="w-full h-full"></div>
             </div>
           </main>
